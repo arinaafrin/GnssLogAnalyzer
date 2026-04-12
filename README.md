@@ -1,10 +1,10 @@
-# GNSS Log Analyzer
+# 🛰️ GNSS Log Analyzer
 
 A GNSS data pipeline built using **Medallion Architecture (Bronze/Silver)** to ingest, validate, and visualize satellite telemetry data in real time.
 
 ---
 
-##  Features
+## 🚀 Features
 
 - **Medallion Data Pipeline**
   - Bronze layer: raw GNSS data storage
@@ -21,8 +21,8 @@ A GNSS data pipeline built using **Medallion Architecture (Bronze/Silver)** to i
   - Full rejection logging for traceability
 
 - **Interactive Dashboards (Streamlit)**
-  -  Operational Dashboard: Live GNSS path + altitude trends
-  -  Engineering Dashboard: Pipeline health + error analytics
+  - 📍 Operational Dashboard: Live GNSS path + altitude trends
+  - 📊 Engineering Dashboard: Pipeline health + error analytics
 
 - **Reliable Ingestion**
   - Idempotent processing using Streamlit session state
@@ -30,7 +30,7 @@ A GNSS data pipeline built using **Medallion Architecture (Bronze/Silver)** to i
 
 ---
 
-## Project Goal
+## 🧠 Project Goal
 
 This project simulates a real-world **data engineering pipeline for satellite telemetry systems**, focusing on:
 
@@ -41,7 +41,7 @@ This project simulates a real-world **data engineering pipeline for satellite te
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - Python (Pandas, SQLAlchemy)
 - Streamlit (Dashboard UI)
@@ -58,7 +58,8 @@ git clone https://github.com/arinaafrin/GnssLogAnalyzer.git
 cd GnssLogAnalyzer
 ```
 ### 2. Start system
+```bash
 docker-compose up --build -d
-
+```
 ### 3. Open dashboard
 http://localhost:8501
