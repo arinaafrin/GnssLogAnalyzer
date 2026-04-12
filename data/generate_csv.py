@@ -16,7 +16,6 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Inject "Missing Data" for the Data Engineers to find
 df.iloc[100:150, 1:3] = np.nan 
 df.to_csv('data/sample_gnss.csv', index=False)
 print("Created 10,000 rows in data/sample_gnss.csv")

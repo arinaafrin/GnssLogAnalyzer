@@ -5,30 +5,22 @@ from sqlalchemy import create_engine, inspect
 import os
 import sys
 
-# -----------------------------
 # Backend imports
-# -----------------------------
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from backend.process import ingest_data
 from backend.db import init_db
 
-# -----------------------------
 # DB CONFIG
-# -----------------------------
 DB_URL = os.getenv("DB_URL", "postgresql://admin:password123@db:5432/gnss_logs")
 engine = create_engine(DB_URL)
 
 st.set_page_config(page_title="GNSS Log Analyzer Pro", layout="wide")
 
-# -----------------------------
 # SESSION STATE
-# -----------------------------
 if "processed_files" not in st.session_state:
     st.session_state.processed_files = set()
 
-# -----------------------------
 # HELPERS
-# -----------------------------
 def get_db_status():
     try:
         inspector = inspect(engine)
@@ -53,15 +45,11 @@ def detect_outliers(df, col):
     return df[(df[col] < q1 - 1.5 * iqr) | (df[col] > q3 + 1.5 * iqr)]
 
 
-# -----------------------------
 # HEADER
-# -----------------------------
 st.title("🛰️ GNSS Log & Quality Analyzer Pro")
 st.markdown("---")
 
-# -----------------------------
 # SIDEBAR
-# -----------------------------
 st.sidebar.header("🕹️ Control Panel")
 view_mode = st.sidebar.selectbox(
     "Switch View",
@@ -72,9 +60,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("📤 Upload GNSS Logs")
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
 
-# -----------------------------
 # BOOTSTRAP DB
-# -----------------------------
 if not get_db_status():
     st.warning("⚠️ Database not initialized.")
     if st.button("🛠️ Initialize DB + Load Sample Data"):
@@ -92,9 +78,7 @@ if not get_db_status():
                 st.error(str(e))
     st.stop()
 
-# -----------------------------
 # FILE INGESTION
-# -----------------------------
 if uploaded_file is not None:
     if uploaded_file.name not in st.session_state.processed_files:
 
@@ -119,9 +103,7 @@ if uploaded_file is not None:
     else:
         st.sidebar.info("File already processed")
 
-# -----------------------------
 # SHARED METRICS (GLOBAL SCOPE)
-# -----------------------------
 raw_count = int(pd.read_sql("SELECT count(*) FROM gnss_raw", engine).iloc[0, 0])
 valid_count = int(pd.read_sql("SELECT count(*) FROM gnss_silver_valid", engine).iloc[0, 0])
 
@@ -130,9 +112,7 @@ error_count = len(err_df)
 
 health = compute_health_score(raw_count, valid_count)
 
-# =========================================================
 # OPERATIONAL DASHBOARD
-# =========================================================
 if view_mode == "Operational Dashboard":
 
     st.subheader("📍 Live GNSS Telemetry")
@@ -166,9 +146,7 @@ if view_mode == "Operational Dashboard":
     st.line_chart(df_valid.set_index("time")[["snr", "satellite_count"]])
 
 
-# =========================================================
 # DATA ENGINEERING REPORT
-# =========================================================
 else:
 
     st.subheader("📊 Pipeline Health Overview")
@@ -187,9 +165,7 @@ else:
     c3.metric("Errors", error_count)
     c4.metric("Health %", health)
 
-    # -------------------------
     # DATA DISTRIBUTION
-    # -------------------------
     st.subheader("📉 Data Distribution")
 
     df_valid = pd.read_sql(
@@ -206,9 +182,7 @@ else:
             outliers = detect_outliers(df_valid, metric)
             st.metric("Outliers detected", len(outliers))
 
-    # -------------------------
     # ERROR INTELLIGENCE
-    # -------------------------
     st.subheader("🚨 Error Intelligence")
 
     if not err_df.empty:
@@ -220,9 +194,7 @@ else:
     else:
         st.success("No errors detected")
 
-    # -------------------------
     # DATA FRESHNESS
-    # -------------------------
     st.subheader("⏱️ Data Freshness")
 
     if not df_valid.empty:
@@ -238,9 +210,7 @@ else:
 
         st.metric("Data Age (sec)", int(age_sec))
 
-        # -------------------------
         # RAW AUDIT TRAIL
-        # -------------------------
         st.subheader("🧾 Raw Data Audit Trail")
 
         st.dataframe(pd.read_sql(
@@ -248,9 +218,7 @@ else:
             engine
         ))
 
-    # -------------------------
     # EXECUTIVE SUMMARY
-    # -------------------------
     st.subheader("📋 Executive Summary")
 
     df_valid = pd.read_sql(
