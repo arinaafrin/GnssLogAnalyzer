@@ -1,0 +1,18 @@
+services:
+  db:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=gnss_logs
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - DB_URL=postgresql://admin:password123@db:5432/gnss_logs
+    depends_on:
+      - db
