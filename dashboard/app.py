@@ -9,9 +9,10 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from backend.process import ingest_data
 from backend.db import init_db
+from backend.report import get_hourly_report, get_daily_quality_trend
+from backend.config import DB_URL
 
 # DB CONFIG
-DB_URL = os.getenv("DB_URL", "postgresql://admin:password123@db:5432/gnss_logs")
 engine = create_engine(DB_URL)
 
 st.set_page_config(page_title="GNSS Log Analyzer Pro", layout="wide")
@@ -217,6 +218,27 @@ else:
             "SELECT * FROM gnss_raw LIMIT 20",
             engine
         ))
+
+    # ROLLUP TRENDS (TimescaleDB continuous aggregate + BI-style daily view)
+    st.subheader("📈 Rollup Trends (Continuous Aggregate)")
+
+    try:
+        hourly_df = get_hourly_report()
+        if not hourly_df.empty:
+            hourly_df["bucket"] = pd.to_datetime(hourly_df["bucket"])
+            st.caption("Hourly rollup from gnss_hourly_agg (continuous aggregate)")
+            st.line_chart(hourly_df.set_index("bucket")[["avg_snr", "avg_satellite_count"]])
+        else:
+            st.info("No rollup data yet — the continuous aggregate refreshes on a schedule.")
+
+        daily_df = get_daily_quality_trend()
+        if not daily_df.empty:
+            daily_df["day"] = pd.to_datetime(daily_df["day"])
+            st.caption("Daily signal quality with 7-day moving average (gnss_daily_quality_trend)")
+            st.line_chart(daily_df.set_index("day")[["avg_snr", "avg_snr_7d_moving_avg"]])
+            st.dataframe(daily_df.head(14))
+    except Exception as e:
+        st.warning(f"Rollup views not available yet: {e}")
 
     # EXECUTIVE SUMMARY
     st.subheader("📋 Executive Summary")
