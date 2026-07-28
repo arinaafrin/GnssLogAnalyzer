@@ -46,6 +46,30 @@ def detect_outliers(df, col):
     return df[(df[col] < q1 - 1.5 * iqr) | (df[col] > q3 + 1.5 * iqr)]
 
 
+def build_dummy_gnss_csv() -> str:
+    """Small hand-crafted dataset covering every validation outcome, so
+    downloading + re-uploading it actually exercises the Bronze -> Silver
+    trigger (see docs/validation_rules.md) instead of just loading rows.
+    """
+    base_time = pd.Timestamp.now(tz="UTC")
+    rows = [
+        # --- valid rows (pass all 3 rules) ---
+        {"time": base_time, "lat": 23.81, "lon": 90.41, "alt": 12.5, "satellite_count": 9, "snr": 35.2},
+        {"time": base_time + pd.Timedelta(seconds=1), "lat": 23.79, "lon": 90.38, "alt": 13.1, "satellite_count": 11, "snr": 40.7},
+        {"time": base_time + pd.Timedelta(seconds=2), "lat": 23.80, "lon": 90.40, "alt": 12.8, "satellite_count": 7, "snr": 25.0},
+        # --- missing_coordinates ---
+        {"time": base_time + pd.Timedelta(seconds=3), "lat": None, "lon": 90.40, "alt": 12.0, "satellite_count": 8, "snr": 30.0},
+        {"time": base_time + pd.Timedelta(seconds=4), "lat": 23.80, "lon": None, "alt": 12.0, "satellite_count": 8, "snr": 30.0},
+        # --- insufficient_satellites (<= 4) ---
+        {"time": base_time + pd.Timedelta(seconds=5), "lat": 23.80, "lon": 90.40, "alt": 12.0, "satellite_count": 2, "snr": 30.0},
+        {"time": base_time + pd.Timedelta(seconds=6), "lat": 23.80, "lon": 90.40, "alt": 12.0, "satellite_count": 0, "snr": 30.0},
+        # --- low_snr (<= 20) ---
+        {"time": base_time + pd.Timedelta(seconds=7), "lat": 23.80, "lon": 90.40, "alt": 12.0, "satellite_count": 8, "snr": 15.4},
+        {"time": base_time + pd.Timedelta(seconds=8), "lat": 23.80, "lon": 90.40, "alt": 12.0, "satellite_count": 8, "snr": 6.1},
+    ]
+    return pd.DataFrame(rows).to_csv(index=False)
+
+
 # HEADER
 st.title("🛰️ GNSS Log & Quality Analyzer Pro")
 st.markdown("---")
@@ -60,6 +84,19 @@ view_mode = st.sidebar.selectbox(
 st.sidebar.markdown("---")
 st.sidebar.subheader("📤 Upload GNSS Logs")
 uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
+
+with st.sidebar.expander("📥 Get sample data (for testing)"):
+    st.caption(
+        "9 rows: 3 valid, 2 missing coordinates, 2 low satellite count, "
+        "2 low SNR — download this, then upload it above to see all "
+        "three validation outcomes at once."
+    )
+    st.download_button(
+        "Download dummy_gnss_log.csv",
+        data=build_dummy_gnss_csv(),
+        file_name="dummy_gnss_log.csv",
+        mime="text/csv",
+    )
 
 # BOOTSTRAP DB
 if not get_db_status():
